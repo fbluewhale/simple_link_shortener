@@ -79,11 +79,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         response_log = ResponseLog(
             res_status_code=response.status_code,
             duration=duration,
-            res_data=((
-                (json.loads(resp_body) if response else dict())
-                if "application/json" in response.headers.get("content-type")
-                else dict(data=resp_body)
-            ) if response.status_code <300 else dict() ),
+            res_data=(
+                (
+                    (json.loads(resp_body) if response else dict())
+                    if "application/json" in response.headers.get("content-type")
+                    else dict(data=resp_body)
+                )
+                if response.status_code < 300
+                else dict()
+            ),
         )
 
         # Create the complete log entry

@@ -65,8 +65,14 @@ async def initialize_odm(client):
     db_name = "link_shortener_test" if os.getenv("TESTING") else "link_shortener"
 
     await init_beanie(
-        database=client.link_shortener_test if os.getenv("TESTING")else client.link_shortener, document_models=load_beanie_models("./src/models")
+        database=(
+            client.link_shortener_test
+            if os.getenv("TESTING")
+            else client.link_shortener
+        ),
+        document_models=load_beanie_models("./src/models"),
     )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -78,13 +84,15 @@ async def lifespan(app: FastAPI):
     # await client.close()
 
 
-app = FastAPI(    title=settings.title,
+app = FastAPI(
+    title=settings.title,
     version=settings.version,
     description=settings.description,
     openapi_prefix=settings.openapi_prefix,
     docs_url=settings.docs_url,
     openapi_url=settings.openapi_url,
-    lifespan=lifespan)
+    lifespan=lifespan,
+)
 app.include_router(router)
 
 
@@ -121,10 +129,9 @@ app.add_middleware(LoggingMiddleware, logger=logging.getLogger("request_logger")
 
 @app.exception_handler(Exception)
 async def http_exception_handler(request, exc):
-    error_instance = BaseErrorInstance(
-        msg="something went wrong"
-    ).model_dump()
+    error_instance = BaseErrorInstance(msg="something went wrong").model_dump()
     return JSONResponse(status_code=500, content={"detail": error_instance})
+
 
 @app.get("/")
 async def root():
